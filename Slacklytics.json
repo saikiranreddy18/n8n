@@ -1,0 +1,147 @@
+{
+  "name": "Slacklytics",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 5 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5717e9c7-aeda-4143-b3b6-a15ba2985a00",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1qUc0XWh5CxT7U4y6Ss4FQ-Ak0-NO_t-i1YRdoOh8bBw",
+          "mode": "list",
+          "cachedResultName": "quotes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qUc0XWh5CxT7U4y6Ss4FQ-Ak0-NO_t-i1YRdoOh8bBw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qUc0XWh5CxT7U4y6Ss4FQ-Ak0-NO_t-i1YRdoOh8bBw/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        220,
+        0
+      ],
+      "id": "e3ac6b4a-5356-4e65-b10a-4559417ed726",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WzYwnECIoAFKZ8Lr",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const today = new Date();\ntoday.setDate(today.getDate() - 5);\nconst fiveDaysAgo = today.toISOString().split('T')[0];\n\nfor (const item of items) {\n  if (item.json.Date === fiveDaysAgo) {\n    const sales = parseFloat(item.json.Sales);\n    const visitors = parseInt(item.json.Visitors);\n    const leads = parseInt(item.json.Leads);\n    const orders = parseInt(item.json.Orders);\n\n    const leadConversion = ((leads / visitors) * 100).toFixed(2);\n    const orderConversion = ((orders / visitors) * 100).toFixed(2);\n\n    const summary =\n`📊 *Daily Metrics Report* (${fiveDaysAgo})\n- Sales: $${sales}\n- Visitors: ${visitors}\n- Leads: ${leads} (${leadConversion}%)\n- Orders: ${orders} (${orderConversion}%)`;\n\n    return [\n      {\n        json: {\n          message: summary,\n          date: fiveDaysAgo\n        }\n      }\n    ];\n  }\n}\n\n// If no data found\nreturn [\n  {\n    json: {\n      message: `❌ No metrics found for (${fiveDaysAgo})`\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "39f09a66-4281-459d-a156-dc4c32be961b",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C095GFP8PJA",
+          "mode": "list",
+          "cachedResultName": "all-n8n"
+        },
+        "text": "={{$json[\"message\"]}}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        660,
+        0
+      ],
+      "id": "51b22886-6d57-4a54-9d9e-8300ddeb8fcc",
+      "name": "Send a message",
+      "webhookId": "64e24a11-0e8f-4b74-a326-8a9507d16057",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "MLCyhO6yLWu0NyBj",
+          "name": "Slack account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "8c2e88ff-8165-4075-bfad-423ab3cbeca6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f3d8b5f28107627d2d3560f5fa099f9b1cfe5513c47548c34b308bc086786843"
+  },
+  "id": "jxRaT2IoiLLvZzaf",
+  "tags": []
+}
